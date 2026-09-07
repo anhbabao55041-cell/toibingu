@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>quocthaiAuth SECURITY - Hệ Thống Kiểm Soát Bản Quyền & Định Danh</title>
+  <meta name="description" content="Hệ thống xác thực và quản lý key bản quyền phần mềm chuyên nghiệp khóa phần cứng (HWID Lock)">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/static/css/cyberauth.css">
+</head>
+<body>
+
+<!-- ==================== CỔNG ĐĂNG NHẬP BẢO MẬT (LOGIN PORTAL) ==================== -->
+<div class="login-overlay" id="seller-login-overlay">
+  <div class="login-card" id="login-card-box">
+    <div class="login-icon-box">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+    </div>
+    
+    <div class="login-title">quocthaiAuth SECURITY</div>
+    <div class="login-subtitle">HỆ THỐNG KIỂM SOÁT ĐỊNH DANH & BẢN QUYỀN v3.8</div>
+
+    <form id="form-seller-login" onsubmit="event.preventDefault(); handleSellerLogin();">
+      <div class="login-input-group">
+        <div class="login-input-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 2l-2 2m-1-1l-3 3m5 0l-3-3m-3 5l-4 4a5.5 5.5 0 0 1-7.78 0 5.5 5.5 0 0 1 0-7.78l4-4a5.5 5.5 0 0 1 7.78 7.78z"></path>
+          </svg>
+        </div>
+        <input type="password" id="seller-access-key" class="login-input" placeholder="Nhập khóa bảo mật truy cập..." autocomplete="off" required>
+      </div>
+
+      <button type="submit" id="btn-seller-login" class="btn btn-primary login-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+          <polyline points="10 17 15 12 10 7"></polyline>
+          <line x1="15" y1="12" x2="3" y2="12"></line>
+        </svg>
+        <span>XÁC THỰC TRUY CẬP HỆ THỐNG</span>
+      </button>
+
+      <div class="login-footer-hint">
+        🔒 Vui lòng nhập mã khóa bảo mật để mở khóa hệ thống
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ==================== GIAO DIỆN CHÍNH (MAIN APP LAYOUT) ==================== -->
+<div class="app-layout">
+  <!-- SIDEBAR ĐIỀU HƯỚNG BÊN TRÁI -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="brand-title">
+        quocthaiAuth
+        <span class="sub">IDENTITY CONTROL v3.8</span>
+      </div>
+    </div>
+
+    <nav class="nav-menu">
+      <div class="nav-section-title">TRUNG TÂM ĐIỀU KHIỂN</div>
+      <div class="nav-item active" data-tab="overview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Tổng Quan Hệ Thống</span>
+      </div>
+      <div class="nav-item" data-tab="apps">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span>Ứng Dụng & Phần Mềm</span>
+      </div>
+
+      <div class="nav-section-title">QUẢN LÝ BẢN QUYỀN</div>
+      <div class="nav-item" data-tab="generator">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="7" cy="17" r="4"/><path d="M10.85 13.15 19 5l3 3-8.15 8.15"/><path d="M16 8l2 2"/></svg>
+        <span>Bộ Sinh License Key</span>
+      </div>
+      <div class="nav-item" data-tab="users">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Tài Khoản Khách Hàng</span>
+      </div>
+
+      <div class="nav-section-title">TÍCH HỢP LẬP TRÌNH</div>
+      <div class="nav-item" data-tab="sdk">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span>SDK & Trình Test Sandbox</span>
+      </div>
+      <div class="nav-item" data-tab="apikeys">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 2l-2 2m-1-1l-3 3m5 0l-3-3m-3 5l-4 4a5.5 5.5 0 0 1-7.78 0 5.5 5.5 0 0 1 0-7.78l4-4a5.5 5.5 0 0 1 7.78 7.78z"/></svg>
+        <span>Khóa API Quản Trị</span>
+      </div>
+
+      <div class="nav-section-title">HỆ THỐNG PHÒNG THỦ</div>
+      <div class="nav-item" data-tab="logs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>Nhật Ký Bảo Mật (Logs)</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="system-health-card">
+        <div class="health-status-row">
+          <span style="display:flex; align-items:center; gap:6px;">
+            <span class="pulse-dot"></span>
+            <strong style="color:#fff;">LÕI BẢO MẬT</strong>
+          </span>
+          <span class="badge active" style="font-size:9px;">TRỰC TUYẾN</span>
+        </div>
+        <div style="font-size:10px; font-family:var(--font-mono); color:var(--text-muted);">
+          HWID-Lock: BẬT | AES-256 GCM
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN WRAPPER ==================== -->
+  <div class="main-wrapper">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <div class="page-title-box">
+          <h1 id="header-title">BẢNG ĐIỀU KHIỂN & ĐO LƯỜNG TỪ XA</h1>
+        </div>
+        <span class="breadcrumb-tag" id="header-breadcrumb">TỔNG QUAN / ĐO LƯỜNG</span>
+      </div>
+
+      <div class="header-right">
+        <div class="telemetry-pill emerald">
+          <span class="pulse-dot"></span>
+          <span>LÁ CHẮN: HOẠT ĐỘNG</span>
+        </div>
+
+        <div class="telemetry-pill" id="latency-metric">
+          ~11ms (AES-256)
+        </div>
+
+        <button class="audio-toggle-btn" id="audio-toggle-btn" title="Bật/Tắt Âm Thanh Cyber">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+        </button>
+
+        <div class="user-badge">
+          <div class="avatar">THAI</div>
+          <div class="user-info-text">
+            <span class="user-name">Quản Trị Viên Thái</span>
+            <span class="user-role">SUPER ADMIN</span>
+          </div>
+        </div>
+
+        <!-- Nút Đăng Xuất -->
+        <button class="btn-logout" id="btn-seller-logout" onclick="handleSellerLogout()" title="Đăng xuất khỏi hệ thống">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Đăng Xuất</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ==================== KHU VỰC LÀM VIỆC (WORKSPACE) ==================== -->
+    <main class="workspace">
+
+      <!-- ==================== TAB 1: TỔNG QUAN ==================== -->
+      <section id="tab-overview" class="tab-pane active">
+        <!-- Lưới thẻ chỉ số Metrics -->
+        <div class="metrics-grid">
+          <div class="metric-card cyan">
+            <div class="metric-header">
+              <span class="metric-title">Ứng Dụng Bảo Vệ</span>
+              <div class="metric-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="stat-total-apps">3</div>
+            <div class="metric-sub"><span class="trend-up">●</span> Phần mềm / Tool Đang Hoạt Động</div>
+          </div>
+
+          <div class="metric-card emerald">
+            <div class="metric-header">
+              <span class="metric-title">Tổng Khóa Bản Quyền</span>
+              <div class="metric-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="7" cy="17" r="4"/><path d="M10.85 13.15 19 5l3 3-8.15 8.15"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="stat-total-licenses">12</div>
+            <div class="metric-sub"><span class="trend-up">Đã kích hoạt:</span> <span id="stat-bound-licenses">5</span> Keys</div>
+          </div>
+
+          <div class="metric-card purple">
+            <div class="metric-header">
+              <span class="metric-title">Khách Mua Tool</span>
+              <div class="metric-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="stat-total-users">4</div>
+            <div class="metric-sub"><span class="trend-up">Tài khoản:</span> Xác thực phần mềm</div>
+          </div>
+
+          <div class="metric-card amber">
+            <div class="metric-header">
+              <span class="metric-title">Thiết Bị Đã Khóa (HWID)</span>
+              <div class="metric-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="stat-total-hwids">5</div>
+            <div class="metric-sub">Phần cứng máy tính được liên kết</div>
+          </div>
+
+          <div class="metric-card crimson">
+            <div class="metric-header">
+              <span class="metric-title">Cảnh Báo Chặn Đứng</span>
+              <div class="metric-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="stat-security-alerts">3</div>
+            <div class="metric-sub" style="color:var(--crimson-neon);">Lệch HWID / Cố tình dò Key</div>
+          </div>
+        </div>
+
+        <!-- 2 Cột Tổng quan -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+          <!-- Cột Trái: Thao Tác Nhanh & Kiến Trúc -->
+          <div>
+            <div class="card-panel">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span>Thao Tác Quản Trị Nhanh</span>
+                </div>
+              </div>
+              <div style="padding:20px; display:flex; flex-direction:column; gap:12px;">
+                <button class="btn btn-primary" style="justify-content:flex-start;" onclick="switchTab('generator')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="7" cy="17" r="4"/><path d="M10.85 13.15 19 5l3 3-8.15 8.15"/></svg>
+                  <span>Mở Trình Sinh License Key Tự Động</span>
+                </button>
+                <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="openModal('modal-create-app')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Thêm Ứng Dụng / Tool Mới</span>
+                </button>
+                <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="openModal('modal-create-user')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                  <span>Cấp Tài Khoản Khách Đăng Nhập Tool</span>
+                </button>
+                <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="switchTab('sdk')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  <span>Mở Thư Viện SDK & Test API Sandbox</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Cơ chế an ninh -->
+            <div class="card-panel">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <span>Cơ Chế Bảo Vệ Đa Tầng (Security Core)</span>
+                </div>
+              </div>
+              <div style="padding:20px; font-size:12px; color:var(--text-dim); line-height:1.8;">
+                <div>🔒 <strong>Khóa cứng phần cứng (HWID Lock):</strong> Tính toán định danh độc nhất dựa trên CPU ID + Motherboard UUID + Ổ đĩa máy tính.</div>
+                <div>⚡ <strong>Chống tấn công Brute-Force:</strong> Cơ chế trượt IP chặn tự động mọi hành vi quét hoặc thử key sai liên tục.</div>
+                <div>🛡️ <strong>Chữ ký số HMAC-SHA256:</strong> Mỗi phản hồi xác thực đều được ký bảo mật chống chỉnh sửa gói tin mạng.</div>
+                <div>📡 <strong>Tín hiệu duy trì phiên (Heartbeat):</strong> Kiểm tra định kỳ 60 giây ngầm, chặn đứng mọi can thiệp bypass bộ nhớ RAM.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cột Phải: Luồng Nhật Ký Thời Gian Thực -->
+          <div>
+            <div class="card-panel">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <span class="pulse-dot"></span>
+                  <span>Nhật Ký Bảo Mật Thời Gian Thực</span>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="loadDashboardStats()">Làm Mới</button>
+              </div>
+              <div id="overview-recent-logs" style="max-height:450px; overflow-y:auto;">
+                <!-- Điền tự động -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 2: ỨNG DỤNG ==================== -->
+      <section id="tab-apps" class="tab-pane">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <div>
+            <h2 style="font-family:var(--font-display); font-size:16px; color:#fff;">Danh Mục Ứng Dụng / Tool Quản Lý</h2>
+            <p style="font-size:12px; color:var(--text-muted);">Quản lý các phần mềm phát hành, lấy mã bí mật (Secret Key) và liên kết tải cập nhật.</p>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('modal-create-app')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Đăng Ký Tool Mới</span>
+          </button>
+        </div>
+
+        <div class="apps-grid" id="apps-cards-grid">
+          <!-- Điền tự động -->
+        </div>
+      </section>
+
+      <!-- ==================== TAB 3: BỘ SINH LICENSE & QUẢN LÝ ==================== -->
+      <section id="tab-generator" class="tab-pane">
+        <!-- Bảng điều khiển sinh key -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="7" cy="17" r="4"/><path d="M10.85 13.15 19 5l3 3-8.15 8.15"/><path d="M16 8l2 2"/></svg>
+              <span>Bộ Sinh License Key Tự Động Chuẩn Xác</span>
+            </div>
+            <span class="breadcrumb-tag">MÃ HÓA AES-256 + KHÓA PHẦN CỨNG</span>
+          </div>
+
+          <div style="padding:24px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px;">
+              <!-- Chọn Ứng Dụng -->
+              <div class="form-group">
+                <label class="form-label">Chọn Phần Mềm / Tool Áp Dụng <span class="req">*</span></label>
+                <select id="gen-app-select" class="form-select">
+                  <!-- Điền tự động -->
+                </select>
+                <div class="form-hint">Ứng dụng mà khách hàng sẽ dùng mã key này để xác thực.</div>
+              </div>
+
+              <!-- Định dạng Prefix & Mask -->
+              <div class="form-group">
+                <label class="form-label">Tiền Tố (Prefix) & Định Dạng Mask</label>
+                <div style="display:flex; gap:10px;">
+                  <input type="text" id="gen-prefix" class="form-input" style="width:120px;" value="CYBER" placeholder="Tiền tố">
+                  <input type="text" id="gen-mask" class="form-input font-mono" value="XXXX-XXXX-XXXX" placeholder="XXXX-XXXX-XXXX">
+                </div>
+                <div class="form-hint">Cấu trúc sinh mã (Ví dụ: CYBER-XXXX-XXXX-XXXX).</div>
+              </div>
+            </div>
+
+            <!-- Giới Hạn Thiết Bị HWID Pills -->
+            <div class="form-group">
+              <label class="form-label">Giới Hạn Thiết Bị (Hardware ID - HWID Lock) <span class="req">*</span></label>
+              <div class="segmented-pills" id="gen-hwid-pills">
+                <div class="pill-option active" data-value="1">1 Thiết bị (Khóa Cứng)</div>
+                <div class="pill-option" data-value="5">5 Thiết bị (Nhóm)</div>
+                <div class="pill-option" data-value="10">10 Thiết bị (Studio)</div>
+                <div class="pill-option" data-value="-1">Vĩnh viễn (Không Giới Hạn)</div>
+              </div>
+              <div class="form-hint">Số lượng máy tính tối đa được phép kích hoạt đồng thời trên cùng một mã key.</div>
+            </div>
+
+            <!-- Thời Hạn Bản Quyền Duration Pills -->
+            <div class="form-group">
+              <label class="form-label">Thời Hạn Sử Dụng (Duration) <span class="req">*</span></label>
+              <div class="segmented-pills" id="gen-duration-pills">
+                <div class="pill-option" data-value="1">1 Ngày (Thử nghiệm)</div>
+                <div class="pill-option" data-value="2">2 Ngày (Cuối tuần)</div>
+                <div class="pill-option" data-value="5">5 Ngày (Trải nghiệm)</div>
+                <div class="pill-option" data-value="14">14 Ngày (2 Tuần)</div>
+                <div class="pill-option active" data-value="30">30 Ngày (1 Tháng)</div>
+                <div class="pill-option" data-value="90">90 Ngày (1 Quý)</div>
+                <div class="pill-option" data-value="-1">Vĩnh viễn (Trọn Đời)</div>
+              </div>
+              <div class="form-hint">Thời gian bắt đầu được đếm ngược kể từ giây phút khách hàng kích hoạt lần đầu trên máy tính.</div>
+            </div>
+
+            <!-- Số lượng sinh hàng loạt & Ghi chú -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px; margin-top:20px;">
+              <div class="form-group">
+                <label class="form-label">Số Lượng Sinh Hàng Loạt: <strong id="gen-quantity-val" style="color:var(--cyan-neon);">1</strong> Key</label>
+                <input type="range" id="gen-quantity" min="1" max="50" value="1" style="width:100%; accent-color:var(--cyan-neon); margin-top:6px;">
+                <div class="form-hint">Sinh tối đa 50 keys trong một lần tạo.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Gắn Thẻ Khách Hàng (Tag)</label>
+                <input type="text" id="gen-client-tag" class="form-input" placeholder="VD: Khách VIP #4012">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Ghi Chú Đơn Hàng (Notes)</label>
+                <input type="text" id="gen-notes" class="form-input" placeholder="VD: Đã thanh toán chuyển khoản">
+              </div>
+            </div>
+
+            <!-- Nút Tạo Key -->
+            <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+              <button class="btn btn-primary" id="btn-submit-generate" style="padding:12px 28px; font-size:13px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <span>XUẤT LICENSE BẢN QUYỀN</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bảng Quản Lý Danh Sách License Keys -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              <span>Kho License Key Đã Cấp Phát</span>
+            </div>
+
+            <div class="panel-actions">
+              <!-- Lọc Ứng Dụng -->
+              <select id="license-filter-app" class="form-select" style="width:160px; padding:6px 10px;" onchange="loadLicenses()">
+                <option value="">Tất Cả Ứng Dụng</option>
+              </select>
+
+              <!-- Lọc Trạng Thái -->
+              <select id="license-filter-status" class="form-select" style="width:140px; padding:6px 10px;" onchange="loadLicenses()">
+                <option value="">Tất Cả Trạng Thái</option>
+                <option value="active">Đang Chờ (Chưa Dùng)</option>
+                <option value="bound">Đã Kích Hoạt (Đang Dùng)</option>
+                <option value="expired">Đã Hết Hạn</option>
+                <option value="banned">Bị Khóa (Ban)</option>
+              </select>
+
+              <!-- Tìm Kiếm -->
+              <input type="text" id="license-search-input" class="form-input" style="width:180px; padding:6px 10px;" placeholder="Tìm mã key hoặc tag..." oninput="loadLicenses()">
+
+              <!-- Xuất dữ liệu -->
+              <button class="btn btn-secondary btn-sm" onclick="exportLicensesCSV()" title="Xuất file CSV">
+                Xuất CSV
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="exportLicensesJSON()" title="Xuất file JSON">
+                Xuất JSON
+              </button>
+            </div>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mã Khóa License</th>
+                  <th>Phần Mềm</th>
+                  <th>Trạng Thái</th>
+                  <th>Số Thiết Bị Đã Khóa</th>
+                  <th>Thời Hạn / Hết Hạn</th>
+                  <th>Ngày Cấp</th>
+                  <th>Hành Động Quản Trị</th>
+                </tr>
+              </thead>
+              <tbody id="licenses-table-body">
+                <!-- Điền tự động -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 4: QUẢN LÝ NGƯỜI DÙNG ==================== -->
+      <section id="tab-users" class="tab-pane">
+        <div class="card-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              <span>Quản Lý Tài Khoản Khách Hàng (End-Users)</span>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openModal('modal-create-user')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Cấp Tài Khoản Mới</span>
+            </button>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Tên Đăng Nhập</th>
+                  <th>Phần Mềm</th>
+                  <th>Trạng Thái Tài Khoản</th>
+                  <th>Key Bản Quyền Gán Kèm</th>
+                  <th>Lần Cuối Đăng Nhập</th>
+                  <th>Trạng Thái HWID</th>
+                  <th>Hành Động Từ Xa</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body">
+                <!-- Điền tự động -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 5: SDK & TRÌNH TEST SANDBOX ==================== -->
+      <section id="tab-sdk" class="tab-pane">
+        <!-- Interactive API Sandbox -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+              <span>Trình Kiểm Thử API Trực Tiếp (Interactive Sandbox)</span>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <span class="badge active" id="sandbox-status-badge">SẴN SÀNG</span>
+              <span class="telemetry-pill" id="sandbox-latency-badge">-- ms</span>
+            </div>
+          </div>
+
+          <div style="padding:20px;">
+            <div class="sandbox-grid">
+              <!-- Cột Trái: Thiết lập request -->
+              <div>
+                <div class="form-group">
+                  <label class="form-label">Chọn Kịch Bản Thử Nghiệm Mẫu</label>
+                  <select id="sandbox-preset" class="form-select">
+                    <option value="verify_license">1. Kiểm Tra Key & Khóa HWID (/license/verify)</option>
+                    <option value="activate_license">2. Kích Hoạt Key Lần Đầu & Khóa Máy (/license/activate)</option>
+                    <option value="user_login">3. Đăng Nhập Tài Khoản Tool (/auth/login)</option>
+                    <option value="heartbeat_ping">4. Gửi Tín Hiệu Sống Heartbeat (/license/heartbeat)</option>
+                    <option value="check_version">5. Kiểm Tra Cập Nhật Phiên Bản (/app/version)</option>
+                  </select>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-bottom:14px;">
+                  <select id="sandbox-method" class="form-select" style="width:110px;">
+                    <option value="POST">POST</option>
+                    <option value="GET">GET</option>
+                  </select>
+                  <input type="text" id="sandbox-endpoint" class="form-input font-mono" value="/api/v1/client/license/verify">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Dữ Liệu Gửi Đi (JSON Body)</label>
+                  <textarea id="sandbox-body" class="form-textarea font-mono" rows="8" style="resize:vertical;">{
+  "app_code": "AEGIS-SEC",
+  "license_key": "AEGIS-7F89-A2C4-90B1",
+  "hwid": "HWID-WIN11-BFEBFBFF00090672-SN750-NVME",
+  "device_name": "DESKTOP-THAI-RIG"
+}</textarea>
+                </div>
+
+                <button class="btn btn-primary" id="btn-run-sandbox" style="width:100%; padding:10px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  <span>GỬI LỆNH TEST THỜI GIAN THỰC</span>
+                </button>
+              </div>
+
+              <!-- Cột Phải: Phản hồi từ Server -->
+              <div>
+                <label class="form-label">Kết Quả Phản Hồi Từ Server (Realtime Payload)</label>
+                <div id="sandbox-response-viewer" class="response-viewer">
+                  <span class="tok-comment">// Nhấn "GỬI LỆNH TEST THỜI GIAN THỰC" để xem phản hồi...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thư Viện Mã Nguồn SDK -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Thư Viện Mã Nguồn SDK Tích Hợp Đa Ngôn Ngữ</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="copySdkCurrentCode()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Sao Chép Đoạn Code</span>
+            </button>
+          </div>
+
+          <!-- Tab các ngôn ngữ -->
+          <div class="sdk-tabs-bar" id="sdk-language-tabs">
+            <!-- Điền tự động -->
+          </div>
+
+          <!-- Khung hiển thị code -->
+          <div class="code-container">
+            <div class="code-header">
+              <span id="sdk-filename">CyberAuthClient.cs</span>
+              <span class="badge active" style="font-size:9px;">CHUẨN SẴN SÀNG SỬ DỤNG</span>
+            </div>
+            <pre class="code-pre" id="sdk-code-block"></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 6: KHÓA API SELLER ==================== -->
+      <section id="tab-apikeys" class="tab-pane">
+        <div class="card-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 2l-2 2m-1-1l-3 3m5 0l-3-3m-3 5l-4 4a5.5 5.5 0 0 1-7.78 0 5.5 5.5 0 0 1 0-7.78l4-4a5.5 5.5 0 0 1 7.78 7.78z"/></svg>
+                <span>Mã Khóa API Quản Trị Seller (Master Tokens)</span>
+              </div>
+              <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Kết nối hệ thống bán tự động (Shop tool tự động, Bot Discord, Bot Telegram cấp key tự động).</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openModal('modal-create-apikey')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Cấp API Key Mới</span>
+            </button>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Tên Seller / Kênh Tích Hợp</th>
+                  <th>Mã Public API Key</th>
+                  <th>Phân Quyền</th>
+                  <th>IP Cho Phép (Whitelist)</th>
+                  <th>Giới Hạn Tốc Độ</th>
+                  <th>Hành Động</th>
+                </tr>
+              </thead>
+              <tbody id="apikeys-table-body">
+                <!-- Điền tự động -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 7: NHẬT KÝ BẢO MẬT ==================== -->
+      <section id="tab-logs" class="tab-pane">
+        <div class="card-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span>Toàn Bộ Nhật Ký Kiểm Tra Bảo Mật (Audit Trails)</span>
+            </div>
+
+            <div class="panel-actions">
+              <select id="logs-filter-severity" class="form-select" style="width:140px; padding:6px 10px;" onchange="loadSecurityLogs()">
+                <option value="all">Tất Cả Mức Độ</option>
+                <option value="danger">Nguy Hiểm (Cảnh Báo)</option>
+                <option value="warning">Cảnh Báo</option>
+                <option value="success">Thành Công</option>
+                <option value="info">Thông Tin</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" onclick="loadSecurityLogs()">Làm Mới</button>
+              <button class="btn btn-danger btn-sm" onclick="clearSecurityLogs()">Xóa Nhật Ký</button>
+            </div>
+          </div>
+
+          <div id="full-security-logs-container" style="max-height:650px; overflow-y:auto;">
+            <!-- Điền tự động -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ==================== CÁC HỘP THOẠI MODAL ==================== -->
+
+<!-- Modal: Thêm Ứng Dụng Mới -->
+<div class="modal-backdrop" id="modal-create-app">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Đăng Ký Tool / Ứng Dụng Mới</div>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <form id="form-create-app">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Tên Phần Mềm / Tool <span class="req">*</span></label>
+          <input type="text" id="new-app-name" class="form-input" required placeholder="VD: Aegis Sentinel Anti-Cheat Pro">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mã Code Định Danh (App Code) <span class="req">*</span></label>
+          <input type="text" id="new-app-code" class="form-input font-mono" required placeholder="VD: AEGIS-PRO">
+          <div class="form-hint">Mã này dùng để phần mềm client gọi xác thực với server.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phiên Bản Ban Đầu</label>
+          <input type="text" id="new-app-version" class="form-input font-mono" value="1.0.0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Liên Kết Tải Cập Nhật (Download URL)</label>
+          <input type="url" id="new-app-url" class="form-input" placeholder="https://cdn.domain.com/downloads/tool.zip">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mô Tả Chức Năng</label>
+          <textarea id="new-app-desc" class="form-textarea" rows="3" placeholder="Mô tả các tính năng chính của phần mềm..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-modal-cancel">Hủy</button>
+        <button type="submit" class="btn btn-primary">Xác Nhận Tạo Ứng Dụng</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Kết Quả Sinh Key -->
+<div class="modal-backdrop" id="modal-generated-keys">
+  <div class="modal-box" style="max-width:620px;">
+    <div class="modal-header">
+      <div class="modal-title">License Keys Đã Được Tạo Thành Công</div>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="gen-result-info" style="font-size:12px; color:var(--cyan-neon); font-family:var(--font-mono); margin-bottom:12px;"></div>
+      <textarea id="generated-keys-textarea" class="form-textarea font-mono" rows="8" readonly style="font-size:13px;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="downloadKeysAsFile()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Tải Về File .TXT</span>
+      </button>
+      <button class="btn btn-primary" onclick="copyAllGeneratedKeys()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Sao Chép Toàn Bộ Key</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Cấp Tài Khoản Khách Hàng -->
+<div class="modal-backdrop" id="modal-create-user">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Cấp Tài Khoản Người Dùng Mới</div>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <form id="form-create-user">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Phần Mềm Cho Phép Sử Dụng <span class="req">*</span></label>
+          <select id="user-app-select" class="form-select" required></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tên Đăng Nhập (Username) <span class="req">*</span></label>
+          <input type="text" id="new-user-name" class="form-input" required placeholder="VD: khachhang01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mật Khẩu Đăng Nhập <span class="req">*</span></label>
+          <input type="password" id="new-user-pass" class="form-input" required placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gán License Key (Tùy chọn)</label>
+          <input type="text" id="new-user-key" class="form-input font-mono" placeholder="CYBER-XXXX-XXXX-XXXX">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-modal-cancel">Hủy</button>
+        <button type="submit" class="btn btn-primary">Xác Nhận Tạo Người Dùng</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Cấp API Key Cho Seller -->
+<div class="modal-backdrop" id="modal-create-apikey">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Cấp Khóa Master API Key Mới</div>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <form id="form-create-apikey">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Tên Kênh / Đơn Vị Tích Hợp <span class="req">*</span></label>
+          <input type="text" id="new-key-seller" class="form-input" required placeholder="VD: Bot Discord Bán Key Tự Động">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phân Quyền Truy Cập</label>
+          <select id="new-key-role" class="form-select">
+            <option value="admin">Toàn Quyền Quản Trị (Admin - Tạo Key & User)</option>
+            <option value="issuer">Chỉ Tạo & Gia Hạn Key (Issuer)</option>
+            <option value="read_only">Chỉ Xem Thống Kê (Read-Only)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Danh Sách IP Cho Phép (Whitelist)</label>
+          <input type="text" id="new-key-ip" class="form-input font-mono" value="*" placeholder="VD: 192.168.1.1 hoặc *">
+          <div class="form-hint">Nhập '*' để cho phép gọi từ mọi địa chỉ IP máy chủ.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Giới Hạn Tốc Độ (Requests mỗi phút)</label>
+          <input type="number" id="new-key-ratelimit" class="form-input" value="120" min="10" max="1000">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-modal-cancel">Hủy</button>
+        <button type="submit" class="btn btn-primary">Tạo Khóa API</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Kiểm Tra Danh Sách Phần Cứng HWID -->
+<div class="modal-backdrop" id="modal-inspect-hwids">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="inspect-hwids-title">Danh Sách Máy Tính Đã Khóa HWID</div>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <div class="modal-body" id="inspect-hwids-content">
+      <!-- Điền tự động -->
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary btn-modal-cancel">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Vùng hiển thị thông báo Toast -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Scripts -->
+<script src="/static/js/sdk_docs.js"></script>
+<script src="/static/js/sandbox.js"></script>
+<script src="/static/js/generator.js"></script>
+<script src="/static/js/app.js"></script>
+
+</body>
+</html>
