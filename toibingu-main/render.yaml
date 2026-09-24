@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: cyberauth-identity
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: PORT
+        value: 10000
+      - key: SELLER_ACCESS_KEY
+        value: thai
+      - key: DB_PATH
+        value: ./cyberauth.db
